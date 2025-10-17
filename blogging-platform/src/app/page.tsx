@@ -1,103 +1,118 @@
-import Image from "next/image";
+// src/app/page.tsx
+import Link from "next/link";
+import { Button } from "@/components/ui/button"; // Assuming shadcn/ui Button
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card"; // Assuming shadcn/ui Card
+import { Book, Edit, LayoutGrid, Users, Sparkles, Send } from "lucide-react"; // Lucide React icons
 
-export default function Home() {
+export default function LandingPage() {
+  const features = [
+    {
+      icon: Edit,
+      title: "Effortless Blogging",
+      description:
+        "Create, edit, and publish your blog posts with a intuitive content editor. Supports rich text or markdown.",
+    },
+    {
+      icon: LayoutGrid,
+      title: "Category Management",
+      description:
+        "Organize your content with flexible categories, making it easy for readers to find what they love.",
+    },
+    {
+      icon: Users,
+      title: "Multi-User Support",
+      description:
+        "Designed for multiple authors, fostering a collaborative blogging environment (authentication not required for this assignment).",
+    },
+    {
+      icon: Sparkles,
+      title: "Type-Safe API",
+      description:
+        "Built with tRPC and TypeScript for end-to-end type safety, ensuring robust and predictable data flow.",
+    },
+  ];
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] py-10 bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* Hero Section */}
+      <section className="text-center max-w-4xl mx-auto px-4 mb-20">
+        <h1 className="text-6xl font-extrabold text-gray-900 leading-tight mb-6">
+          Your Platform for <span className="text-blue-600">Inspiring</span>{" "}
+          Stories
+        </h1>
+        <p className="text-xl text-gray-700 mb-10 max-w-2xl mx-auto">
+          Create, share, and discover amazing content. A modern blogging
+          platform built for performance and simplicity.
+        </p>
+        <div className="flex justify-center space-x-4">
+          <Link href="/blog/new" passHref>
+            <Button
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+            >
+              <Edit className="mr-2 h-5 w-5" /> Start Blogging
+            </Button>
+          </Link>
+          <Link href="/blog" passHref>
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              <Book className="mr-2 h-5 w-5" /> Explore Posts
+            </Button>
+          </Link>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+
+      {/* Features Section */}
+      <section className="w-full max-w-6xl mx-auto px-4 py-16 bg-white rounded-lg shadow-xl mb-20">
+        <h2 className="text-5xl font-bold text-center text-gray-900 mb-12">
+          Key Features
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {features.map((feature, index) => (
+            <Card
+              key={index}
+              className="flex flex-col items-center text-center p-6 bg-white shadow-sm hover:shadow-md transition-shadow duration-200"
+            >
+              <CardHeader className="flex flex-col items-center p-0 mb-4">
+                <feature.icon className="h-12 w-12 text-blue-500 mb-4" />
+                <CardTitle className="text-2xl font-semibold text-gray-800">
+                  {feature.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <CardDescription className="text-gray-600">
+                  {feature.description}
+                </CardDescription>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Call to Action Section */}
+      <section className="text-center max-w-4xl mx-auto px-4 py-16 bg-blue-600 text-white rounded-lg shadow-xl">
+        <h2 className="text-4xl font-bold mb-6">Ready to Share Your Voice?</h2>
+        <p className="text-xl mb-10">
+          Join our community of passionate writers and start publishing today.
+        </p>
+        <Link href="/blog/new" passHref>
+          <Button
+            size="lg"
+            className="bg-white text-blue-600 hover:bg-gray-100 shadow-lg"
+          >
+            <Send className="mr-2 h-5 w-5" /> Publish Your First Post
+          </Button>
+        </Link>
+      </section>
     </div>
   );
 }
