@@ -99,7 +99,7 @@ export default function PostPage() {
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <time dateTime={post.createdAt}>
+              <time dateTime={new Date(post.createdAt).toISOString()}>
                 {new Date(post.createdAt).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
@@ -127,13 +127,13 @@ export default function PostPage() {
                     />
                   </svg>
                   <div className="flex flex-wrap gap-2">
-                    {post.categories.map((c: any) => (
-                      <span
-                        key={c.id}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {c.name}
-                      </span>
+                    {post.categories.map((c: { id: number; name: string }) => (
+                        <span
+                            key={c.id}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                            {c.name}
+                        </span>
                     ))}
                   </div>
                 </div>

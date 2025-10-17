@@ -2,10 +2,27 @@
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+
+// Define proper types for your post data
+type PostCategory = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
+type Post = {
+  id: number;
+  title: string;
+  content: string;
+  slug: string;
+  // use a broader type here because the server returns a string for status
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  categories?: PostCategory[];
+};
 
 export default function DashboardPage() {
-  const router = useRouter();
   const { data: posts, refetch, isLoading } = trpc.post.getAll.useQuery();
   const deletePost = trpc.post.delete.useMutation();
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -36,9 +53,8 @@ export default function DashboardPage() {
     );
   }
 
-  const draftPosts = posts?.filter((p: any) => p.status === "draft") || [];
-  const publishedPosts =
-    posts?.filter((p: any) => p.status === "published") || [];
+  const draftPosts = posts?.filter((p: Post) => p.status === "draft") || [];
+  const publishedPosts = posts?.filter((p: Post) => p.status === "published") || [];
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 lg:py-12">
@@ -165,7 +181,7 @@ export default function DashboardPage() {
 
           {posts && posts.length > 0 ? (
             <div className="space-y-3 sm:space-y-4">
-              {posts.map((post: any) => (
+              {posts.map((post: Post) => (
                 <div
                   key={post.id}
                   className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-all"
@@ -235,9 +251,7 @@ export default function DashboardPage() {
                                 />
                               </svg>
                               <span>
-                                {post.categories
-                                  .map((c: any) => c.name)
-                                  .join(", ")}
+                                {post.categories.map((c) => c.name).join(", ")}
                               </span>
                             </div>
                           </>

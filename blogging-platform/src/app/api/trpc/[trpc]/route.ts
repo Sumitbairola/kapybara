@@ -8,11 +8,7 @@ const handler = (req: Request) =>
   endpoint: '/api/trpc',
   req,
   router: appRouter,
-  createContext: (opts) => createContext({
-      req: opts.req,
-      resHeaders: new Headers(),
-      info: opts.info,
-  }),
+  createContext: () => createContext(),
   onError: ({ path, error }) => {
     console.error(`❌ tRPC failed on ${path ?? '<no-path>'}: ${error.message}`);
   },

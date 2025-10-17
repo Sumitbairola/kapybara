@@ -1,5 +1,5 @@
 // src/trpc/index.ts
-import { initTRPC, TRPCError } from "@trpc/server";
+import { initTRPC } from "@trpc/server";
 import { Context } from "./context";
 import superjson from "superjson"; // Recommended for tRPC to handle dates, etc.
 
