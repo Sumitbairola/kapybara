@@ -41,10 +41,12 @@ export const postRouter = router({
           .returning();
 
         if (input.categoryIds && input.categoryIds.length > 0) {
-          const postCategoryRelations = input.categoryIds.map((categoryId: any) => ({
-            postId: post.id,
-            categoryId: categoryId,
-          }));
+          const postCategoryRelations = input.categoryIds.map(
+            (categoryId: any) => ({
+              postId: post.id,
+              categoryId: categoryId,
+            })
+          );
           await tx.insert(postsToCategories).values(postCategoryRelations);
         }
         return post;
@@ -102,7 +104,9 @@ export const postRouter = router({
 
       // Step 3: Fetch all categories in a single, efficient query
       const allCategories = await ctx.db.query.categories.findMany();
-      const categoryMap = new Map(allCategories.map((cat: any) => [cat.id, cat]));
+      const categoryMap = new Map(
+        allCategories.map((cat: any) => [cat.id, cat])
+      );
 
       // Step 4: Manually combine the data
       return fetchedPosts.map((post: any) => {
@@ -120,27 +124,9 @@ export const postRouter = router({
 
   // 3. READ Single Post by Slug
   getBySlug: publicProcedure
-    .input(z.void()) // <--- IMPORTANT: Expect no input from tRPC's automatic parsing
-    .query(async ({ ctx }: { ctx: any }) => {
-      // 'input' is no longer a parameter here
-      let slug: string | null = null;
-
-      // Manually parse slug from the request URL
-      // The 'req' object is not directly available in the context for server-side tRPC calls
-      // For Next.js App Router, the URL can be inferred from the request object passed to the API route handler.
-      if (typeof window !== "undefined") {
-        // Check if running in a browser environment
-        slug = new URLSearchParams(window.location.search).get("slug");
-      }
-
-      console.log("Manually extracted slug for post.getBySlug:", slug); // For debugging
-
-      if (typeof slug !== "string" || slug.length === 0) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Slug parameter is missing or invalid in the URL query.",
-        });
-      }
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ input, ctx }: { input: any; ctx: any }) => {
+      const { slug } = input;
 
       // Step 1: Fetch the post by slug
       const post = await ctx.db.query.posts.findFirst({
@@ -158,7 +144,9 @@ export const postRouter = router({
         });
 
       // Step 3: Get the IDs of the categories for this post
-      const categoryIds = postCategoryRelations.map((ptc: any) => ptc.categoryId);
+      const categoryIds = postCategoryRelations.map(
+        (ptc: any) => ptc.categoryId
+      );
 
       let categoriesForPost: any[] = [];
       if (categoryIds.length > 0) {
@@ -226,6 +214,35 @@ export const postRouter = router({
         return post;
       });
       return updatedPost;
+    }),
+
+  getById: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const post = await ctx.db.query.posts.findFirst({
+        where: eq(posts.id, input.id),
+      });
+
+      if (!post) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+      }
+
+      const postCategoryRelations = await ctx.db.query.postsToCategories.findMany({
+        where: eq(postsToCategories.postId, post.id),
+      });
+
+      const categoryIds = postCategoryRelations.map((ptc: any) => ptc.categoryId);
+      let categoriesForPost: any[] = [];
+      if (categoryIds.length > 0) {
+        categoriesForPost = await ctx.db.query.categories.findMany({
+          where: inArray(categories.id, categoryIds),
+        });
+      }
+
+      return {
+        ...post,
+        categories: categoriesForPost,
+      };
     }),
 
   // 5. DELETE Post
