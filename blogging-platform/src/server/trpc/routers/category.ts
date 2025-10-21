@@ -1,4 +1,3 @@
-// src/server/trpc/routers/category.ts
 import { z } from "zod";
 import { publicProcedure, router } from "../index";
 import { categories } from "../../../../drizzle/schema"; // Correct path

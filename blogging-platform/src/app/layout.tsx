@@ -2,6 +2,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { LayoutWrapper } from "@/components/layout-wrapper";
 import { ReactNode } from "react";
+import { Toaster } from "sonner";
 
 export const metadata = {
   title: "Kapybara Blog",
@@ -13,7 +14,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body className="bg-gray-50">
         <Providers>
-          <LayoutWrapper>{children}</LayoutWrapper>
+          <LayoutWrapper>
+            {children}
+            <Toaster />
+            </LayoutWrapper>
         </Providers>
       </body>
     </html>

@@ -1,4 +1,3 @@
-// src/trpc/routers/index.ts
 import { router } from '../index';
 import { postRouter } from './post';
 import { categoryRouter } from './category';

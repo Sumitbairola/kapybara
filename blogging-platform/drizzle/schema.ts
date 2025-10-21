@@ -1,5 +1,4 @@
-// drizzle/schema.ts
-import { pgTable, serial, text, timestamp, boolean, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Define a status enum for posts (published/draft)
@@ -30,7 +29,7 @@ export const postsToCategories = pgTable('posts_to_categories', {
   categoryId: serial('category_id').notNull().references(() => categories.id, { onDelete: 'cascade' }),
 });
 
-// --- Define Relations for Drizzle ORM (Optional but highly recommended for easy querying) ---
+// --- Define Relations for Drizzle ORM ---
 export const postsRelations = relations(posts, ({ many }) => ({
   postsToCategories: many(postsToCategories),
 }));

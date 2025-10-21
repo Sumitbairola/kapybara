@@ -1,4 +1,3 @@
-// src/trpc/context.ts
 import { db } from '../../server/db'; // Import the db instance
 
 export const createContext = async () => {

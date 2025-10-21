@@ -10,7 +10,6 @@ export interface Post {
   title: string;
   content: string;
   slug: string;
-  // use a broader type here because the server returns a string for status
   status: string;
   createdAt: Date;
   updatedAt: Date;

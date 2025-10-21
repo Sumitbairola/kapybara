@@ -1,42 +1,16 @@
-// src/app/page.tsx
 import Link from "next/link";
-import { Button } from "@/components/ui/button"; // Assuming shadcn/ui Button
+import { Button } from "@/components/ui/button"; 
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
-} from "@/components/ui/card"; // Assuming shadcn/ui Card
-import { Book, Edit, LayoutGrid, Users, Sparkles, Send } from "lucide-react"; // Lucide React icons
+} from "@/components/ui/card"; 
+import { features } from "@/data";
+import { Book, Edit, Send } from "lucide-react";
 
 export default function LandingPage() {
-  const features = [
-    {
-      icon: Edit,
-      title: "Effortless Blogging",
-      description:
-        "Create, edit, and publish your blog posts with a intuitive content editor. Supports rich text or markdown.",
-    },
-    {
-      icon: LayoutGrid,
-      title: "Category Management",
-      description:
-        "Organize your content with flexible categories, making it easy for readers to find what they love.",
-    },
-    {
-      icon: Users,
-      title: "Multi-User Support",
-      description:
-        "Designed for multiple authors, fostering a collaborative blogging environment (authentication not required for this assignment).",
-    },
-    {
-      icon: Sparkles,
-      title: "Type-Safe API",
-      description:
-        "Built with tRPC and TypeScript for end-to-end type safety, ensuring robust and predictable data flow.",
-    },
-  ];
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] py-10 bg-gradient-to-br from-gray-50 to-blue-50">

@@ -1,13 +1,34 @@
 'use client';
 import { trpc } from '@/lib/trpc';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Post, PostCategory } from '@/types';
+import { Plus, Tag, Calendar, FileText, X, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { toast } from 'sonner';
 
 export default function BlogPage() {
   const [categoryId, setCategoryId] = useState<number | undefined>();
-  const { data: posts, isLoading } = trpc.post.getAll.useQuery({ categoryId });
+  const { data: posts, isLoading, error } = trpc.post.getAll.useQuery({ categoryId });
   const { data: categories } = trpc.category.getAll.useQuery();
+
+  useEffect(() => {
+    if (error) {
+      toast.error("Failed to load posts", {
+        description: "Please try again later.",
+      });
+    }
+  }, [error]);
 
   if (isLoading) {
     return (
@@ -34,64 +55,68 @@ export default function BlogPage() {
         </div>
 
         {/* Filter and Actions */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            {/* Category Filter */}
-            <div className="flex-1">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Filter by Category
-              </label>
-              <div className="relative">
-                <select
-                  className="w-full sm:w-auto min-w-[200px] px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white text-sm sm:text-base cursor-pointer"
-                  onChange={(e) => setCategoryId(Number(e.target.value) || undefined)}
-                  value={categoryId || ''}
+        <Card className="mb-6 sm:mb-8 py-0">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Category Filter */}
+              <div className="flex-1">
+                <Label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Filter by Category
+                </Label>
+                <Select
+                  value={categoryId?.toString() || "all"}
+                  onValueChange={(value) => {
+                    const newCategoryId = value === "all" ? undefined : Number(value);
+                    setCategoryId(newCategoryId);
+                    if (newCategoryId) {
+                      const categoryName = categories?.find(c => c.id === newCategoryId)?.name;
+                      toast.info(`Filtering by ${categoryName}`);
+                    }
+                  }}
                 >
-                  <option value="">All Categories</option>
-                  {categories?.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+                  <SelectTrigger className="w-full sm:w-auto min-w-[200px]">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories?.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              {/* Create New Post Button */}
+              <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
+                <Link href="/blog/new">
+                  <Plus className="w-5 h-5" />
+                  <span>Create Post</span>
+                </Link>
+              </Button>
             </div>
 
-            {/* Create New Post Button */}
-            <Link
-              href="/blog/new"
-              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-sm sm:text-base shadow-sm"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Create Post</span>
-            </Link>
-          </div>
-
-          {/* Active Filter Badge */}
-          {categoryId && (
-            <div className="mt-4 flex items-center gap-2">
-              <span className="text-sm text-gray-600">Active filter:</span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                {categories?.find(c => c.id === categoryId)?.name}
-                <button
-                  onClick={() => setCategoryId(undefined)}
-                  className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </span>
-            </div>
-          )}
-        </div>
+            {/* Active Filter Badge */}
+            {categoryId && (
+              <div className="mt-4 flex items-center gap-2">
+                <span className="text-sm text-gray-600">Active filter:</span>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 gap-1.5">
+                  {categories?.find(c => c.id === categoryId)?.name}
+                  <button
+                    onClick={() => {
+                      setCategoryId(undefined);
+                      toast.info("Filter cleared");
+                    }}
+                    className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </Badge>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Posts Grid */}
         {posts && posts.length > 0 ? (
@@ -100,98 +125,92 @@ export default function BlogPage() {
               <Link
                 key={post.id}
                 href={`/blog/${post.slug}`}
-                className="group bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all overflow-hidden"
+                className="group"
               >
-                <div className="p-5 sm:p-6">
-                  {/* Status Badge */}
-                  {post.status === 'draft' && (
-                    <div className="mb-3">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        Draft
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Title */}
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
-                    {post.title}
-                  </h2>
-
-                  {/* Content Preview */}
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                    {post.content.substring(0, 150)}...
-                  </p>
-
-                  {/* Meta Information */}
-                  <div className="space-y-2">
-                    {/* Categories */}
-                    {post.categories && post.categories.length > 0 && (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                        <div className="flex flex-wrap gap-1.5">
-                          {post.categories.map((c: PostCategory) => (
-                            <span
-                              key={c.id}
-                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700"
-                            >
-                              {c.name}
-                            </span>
-                          ))}
-                        </div>
+                <Card className="h-full hover:shadow-md transition-all overflow-hidden py-0">
+                  <CardContent className="p-5 sm:p-6">
+                    {/* Status Badge */}
+                    {post.status === 'draft' && (
+                      <div className="mb-3">
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                          Draft
+                        </Badge>
                       </div>
                     )}
 
-                    {/* Date */}
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <time dateTime={post.createdAt.toISOString()}>
-                        {post.createdAt.toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </time>
-                    </div>
-                  </div>
+                    {/* Title */}
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+                      {post.title}
+                    </h2>
 
-                  {/* Read More Arrow */}
-                  <div className="mt-4 flex items-center text-blue-600 text-sm font-medium group-hover:gap-2 transition-all">
-                    <span>Read more</span>
-                    <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
+                    {/* Content Preview */}
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                      {post.content.substring(0, 150)}...
+                    </p>
+
+                    {/* Meta Information */}
+                    <div className="space-y-2">
+                      {/* Categories */}
+                      {post.categories && post.categories.length > 0 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Tag className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <div className="flex flex-wrap gap-1.5">
+                            {post.categories.map((c: PostCategory) => (
+                              <Badge
+                                key={c.id}
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                {c.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Date */}
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Calendar className="w-4 h-4" />
+                        <time dateTime={post.createdAt.toISOString()}>
+                          {post.createdAt.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </time>
+                      </div>
+                    </div>
+
+                    {/* Read More Arrow */}
+                    <div className="mt-4 flex items-center text-blue-600 text-sm font-medium group-hover:gap-2 transition-all">
+                      <span>Read more</span>
+                      <ChevronRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </CardContent>
+                </Card>
               </Link>
             ))}
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-            <div className="max-w-sm mx-auto">
-              <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No posts found</h3>
-              <p className="text-gray-600 mb-6">
-                {categoryId 
-                  ? "No posts in this category yet. Try selecting a different category."
-                  : "Get started by creating your first blog post."}
-              </p>
-              <Link
-                href="/blog/new"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Create Your First Post
-              </Link>
-            </div>
-          </div>
+          <Card>
+            <CardContent className="p-12 text-center">
+              <div className="max-w-sm mx-auto">
+                <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No posts found</h3>
+                <p className="text-gray-600 mb-6">
+                  {categoryId 
+                    ? "No posts in this category yet. Try selecting a different category."
+                    : "Get started by creating your first blog post."}
+                </p>
+                <Button asChild className="gap-2">
+                  <Link href="/blog/new">
+                    <Plus className="w-5 h-5" />
+                    Create Your First Post
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

@@ -1,4 +1,3 @@
-// src/server/trpc/routers/post.ts
 import { z } from "zod";
 import { publicProcedure, router } from "../index";
 import {
