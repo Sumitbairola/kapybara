@@ -9,45 +9,6 @@ import {
 import { eq, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
-// Define proper types
-type CreatePostInput = {
-  title: string;
-  content: string;
-  categoryIds?: number[];
-  status: (typeof postStatusEnum.enumValues)[number];
-};
-
-type UpdatePostInput = {
-  id: number;
-  title?: string;
-  content?: string;
-  categoryIds?: number[];
-  status?: (typeof postStatusEnum.enumValues)[number];
-};
-
-type GetAllInput = {
-  categoryId?: number;
-};
-
-// Infer types from your actual database schema
-type DbTransaction = {
-  insert: (table: typeof posts | typeof postsToCategories) => {
-    values: (data: unknown) => {
-      returning: () => Promise<unknown[]>;
-    };
-  };
-  update: (table: typeof posts) => {
-    set: (data: unknown) => {
-      where: (condition: unknown) => {
-        returning: () => Promise<unknown[]>;
-      };
-    };
-  };
-  delete: (table: typeof postsToCategories) => {
-    where: (condition: unknown) => Promise<void>;
-  };
-};
-
 type PostRecord = {
   id: number;
   title: string;
@@ -70,40 +31,6 @@ type PostToCategoryRecord = {
   categoryId: number;
 };
 
-type DbContext = {
-  db: {
-    transaction: <T>(fn: (tx: DbTransaction) => Promise<T>) => Promise<T>;
-    select: (fields: { postId: typeof postsToCategories.postId }) => {
-      from: (table: typeof postsToCategories) => {
-        where: (condition: unknown) => {
-          execute: () => Promise<{ postId: number }[]>;
-        };
-      };
-    };
-    delete: (table: typeof posts) => {
-      where: (condition: unknown) => {
-        returning: () => Promise<PostRecord[]>;
-      };
-    };
-    query: {
-      posts: {
-        findMany: (options?: { where?: unknown }) => Promise<PostRecord[]>;
-        findFirst: (options?: {
-          where?: unknown;
-        }) => Promise<PostRecord | undefined>;
-      };
-      postsToCategories: {
-        findMany: (options?: {
-          where?: unknown;
-        }) => Promise<PostToCategoryRecord[]>;
-      };
-      categories: {
-        findMany: (options?: { where?: unknown }) => Promise<CategoryRecord[]>;
-      };
-    };
-  };
-};
-
 export const postRouter = router({
   // 1. CREATE Post
   create: publicProcedure
@@ -115,40 +42,36 @@ export const postRouter = router({
         status: z.enum(postStatusEnum.enumValues).default("draft"),
       })
     )
-    .mutation(
-      async ({ input, ctx }) => {
-        const slug = input.title
-          .toLowerCase()
-          .replace(/ /g, "-")
-          .replace(/[^\w-]+/g, "");
+    .mutation(async ({ input, ctx }) => {
+      const slug = input.title
+        .toLowerCase()
+        .replace(/ /g, "-")
+        .replace(/[^\w-]+/g, "");
 
-        const newPost = await ctx.db.transaction(async (tx) => {
-          const [post] = await tx
-            .insert(posts)
-            .values({
-              title: input.title,
-              content: input.content,
-              slug: slug,
-              status: input.status,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            })
-            .returning();
+      const newPost = await ctx.db.transaction(async (tx) => {
+        const [post] = await tx
+          .insert(posts)
+          .values({
+            title: input.title,
+            content: input.content,
+            slug: slug,
+            status: input.status,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
 
-          if (input.categoryIds && input.categoryIds.length > 0) {
-            const postCategoryRelations = input.categoryIds.map(
-              (categoryId) => ({
-                postId: (post as PostRecord).id,
-                categoryId: categoryId,
-              })
-            );
-            await tx.insert(postsToCategories).values(postCategoryRelations);
-          }
-          return post;
-        });
-        return newPost;
-      }
-    ),
+        if (input.categoryIds && input.categoryIds.length > 0) {
+          const postCategoryRelations = input.categoryIds.map((categoryId) => ({
+            postId: (post as PostRecord).id,
+            categoryId: categoryId,
+          }));
+          await tx.insert(postsToCategories).values(postCategoryRelations);
+        }
+        return post;
+      });
+      return newPost;
+    }),
 
   // 2. READ All Posts (with optional category filtering)
   getAll: publicProcedure
@@ -212,38 +135,36 @@ export const postRouter = router({
   // 3. READ Single Post by Slug
   getBySlug: publicProcedure
     .input(z.object({ slug: z.string() }))
-    .query(
-      async ({ input, ctx }) => {
-        const { slug } = input;
+    .query(async ({ input, ctx }) => {
+      const { slug } = input;
 
-        const post = await ctx.db.query.posts.findFirst({
-          where: eq(posts.slug, slug),
+      const post = await ctx.db.query.posts.findFirst({
+        where: eq(posts.slug, slug),
+      });
+
+      if (!post) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+      }
+
+      const postCategoryRelations =
+        await ctx.db.query.postsToCategories.findMany({
+          where: eq(postsToCategories.postId, post.id),
         });
 
-        if (!post) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
-        }
+      const categoryIds = postCategoryRelations.map((ptc) => ptc.categoryId);
 
-        const postCategoryRelations =
-          await ctx.db.query.postsToCategories.findMany({
-            where: eq(postsToCategories.postId, post.id),
-          });
-
-        const categoryIds = postCategoryRelations.map((ptc) => ptc.categoryId);
-
-        let categoriesForPost: CategoryRecord[] = [];
-        if (categoryIds.length > 0) {
-          categoriesForPost = await ctx.db.query.categories.findMany({
-            where: inArray(categories.id, categoryIds),
-          });
-        }
-
-        return {
-          ...post,
-          categories: categoriesForPost,
-        };
+      let categoriesForPost: CategoryRecord[] = [];
+      if (categoryIds.length > 0) {
+        categoriesForPost = await ctx.db.query.categories.findMany({
+          where: inArray(categories.id, categoryIds),
+        });
       }
-    ),
+
+      return {
+        ...post,
+        categories: categoriesForPost,
+      };
+    }),
 
   // 4. UPDATE Post
   update: publicProcedure
@@ -256,80 +177,76 @@ export const postRouter = router({
         status: z.enum(postStatusEnum.enumValues).optional(),
       })
     )
-    .mutation(
-      async ({ input, ctx }) => {
-        const { id, categoryIds, ...updateData } = input;
-        const slug = updateData.title
-          ? updateData.title
-              .toLowerCase()
-              .replace(/ /g, "-")
-              .replace(/[^\w-]+/g, "")
-          : undefined;
+    .mutation(async ({ input, ctx }) => {
+      const { id, categoryIds, ...updateData } = input;
+      const slug = updateData.title
+        ? updateData.title
+            .toLowerCase()
+            .replace(/ /g, "-")
+            .replace(/[^\w-]+/g, "")
+        : undefined;
 
-        const updatedPost = await ctx.db.transaction(async (tx) => {
-          const [post] = await tx
-            .update(posts)
-            .set({
-              ...updateData,
-              slug: slug,
-              updatedAt: new Date(),
-            })
-            .where(eq(posts.id, id))
-            .returning();
+      const updatedPost = await ctx.db.transaction(async (tx) => {
+        const [post] = await tx
+          .update(posts)
+          .set({
+            ...updateData,
+            slug: slug,
+            updatedAt: new Date(),
+          })
+          .where(eq(posts.id, id))
+          .returning();
 
-          if (!post) {
-            throw new Error("Post not found");
+        if (!post) {
+          throw new Error("Post not found");
+        }
+
+        if (categoryIds !== undefined) {
+          await tx
+            .delete(postsToCategories)
+            .where(eq(postsToCategories.postId, id));
+          if (categoryIds.length > 0) {
+            const newRelations = categoryIds.map((categoryId) => ({
+              postId: id,
+              categoryId: categoryId,
+            }));
+            await tx.insert(postsToCategories).values(newRelations);
           }
-
-          if (categoryIds !== undefined) {
-            await tx
-              .delete(postsToCategories)
-              .where(eq(postsToCategories.postId, id));
-            if (categoryIds.length > 0) {
-              const newRelations = categoryIds.map((categoryId) => ({
-                postId: id,
-                categoryId: categoryId,
-              }));
-              await tx.insert(postsToCategories).values(newRelations);
-            }
-          }
-          return post;
-        });
-        return updatedPost;
-      }
-    ),
+        }
+        return post;
+      });
+      return updatedPost;
+    }),
 
   getById: publicProcedure
     .input(z.object({ id: z.number() }))
-    .query(
-      async ({ input, ctx }) => {
-        const post = await ctx.db.query.posts.findFirst({
-          where: eq(posts.id, input.id),
+    .query(async ({ input, ctx }) => {
+      const post = await ctx.db.query.posts.findFirst({
+        where: eq(posts.id, input.id),
+      });
+
+      if (!post) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+      }
+
+      const postCategoryRelations =
+        await ctx.db.query.postsToCategories.findMany({
+          where: eq(postsToCategories.postId, post.id),
         });
 
-        if (!post) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
-        }
-
-        const postCategoryRelations =
-          await ctx.db.query.postsToCategories.findMany({
-            where: eq(postsToCategories.postId, post.id),
-          });
-
-        const categoryIds = postCategoryRelations.map((ptc) => ptc.categoryId);
-        let categoriesForPost: CategoryRecord[] = [];
-        if (categoryIds.length > 0) {
-          categoriesForPost = await ctx.db.query.categories.findMany({
-            where: inArray(categories.id, categoryIds),
-          });
-        }
-
-        return {
-          ...post,
-          categories: categoriesForPost,
-        };
+      const categoryIds = postCategoryRelations.map((ptc) => ptc.categoryId);
+      let categoriesForPost: CategoryRecord[] = [];
+      if (categoryIds.length > 0) {
+        categoriesForPost = await ctx.db.query.categories.findMany({
+          where: inArray(categories.id, categoryIds),
+        });
       }
-    ),
+
+      return {
+        ...post,
+        categories: categoriesForPost,
+      };
+    }),
 
   // 5. DELETE Post
   delete: publicProcedure
@@ -338,17 +255,15 @@ export const postRouter = router({
         id: z.number(),
       })
     )
-    .mutation(
-      async ({ input, ctx }) => {
-        const [deletedPost] = await ctx.db
-          .delete(posts)
-          .where(eq(posts.id, input.id))
-          .returning();
+    .mutation(async ({ input, ctx }) => {
+      const [deletedPost] = await ctx.db
+        .delete(posts)
+        .where(eq(posts.id, input.id))
+        .returning();
 
-        if (!deletedPost) {
-          throw new Error("Post not found");
-        }
-        return deletedPost;
+      if (!deletedPost) {
+        throw new Error("Post not found");
       }
-    ),
+      return deletedPost;
+    }),
 });
