@@ -98,7 +98,7 @@ export function LayoutWrapper({ children }: { children: ReactNode }) {
                   Categories
                 </Link>
               </Button>
-              <Button asChild className="gap-2 mt-2">
+              <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
                 <Link href="/blog/new">
                   <Plus className="w-5 h-5" />
                   New Post
