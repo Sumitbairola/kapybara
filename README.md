@@ -126,8 +126,6 @@ A modern, full-stack blogging platform built with Next.js 15, tRPC, Prisma, and 
 
     Navigate to http://localhost:3000
 
-# Environment Variables
 
-# Database
-DATABASE_URL='postgresql://neondb_owner:npg_IphLDN2OlKr4@ep-frosty-tree-ad8p9w4h-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+
 
