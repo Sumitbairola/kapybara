@@ -1,25 +1,29 @@
-'use client';
-import { trpc } from '@/lib/trpc';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import type { Post, PostCategory } from '@/types';
-import { Plus, Tag, Calendar, FileText, X, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+"use client";
+import { trpc } from "@/lib/trpc";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import type { Post, PostCategory } from "@/types";
+import { Plus, Tag, Calendar, FileText, X, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { toast } from "sonner";
 
 export default function BlogPage() {
   const [categoryId, setCategoryId] = useState<number | undefined>();
-  const { data: posts, isLoading, error } = trpc.post.getAll.useQuery({ categoryId });
+  const {
+    data: posts,
+    isLoading,
+    error,
+  } = trpc.post.getAll.useQuery({ categoryId });
   const { data: categories } = trpc.category.getAll.useQuery();
 
   useEffect(() => {
@@ -66,10 +70,13 @@ export default function BlogPage() {
                 <Select
                   value={categoryId?.toString() || "all"}
                   onValueChange={(value) => {
-                    const newCategoryId = value === "all" ? undefined : Number(value);
+                    const newCategoryId =
+                      value === "all" ? undefined : Number(value);
                     setCategoryId(newCategoryId);
                     if (newCategoryId) {
-                      const categoryName = categories?.find(c => c.id === newCategoryId)?.name;
+                      const categoryName = categories?.find(
+                        (c) => c.id === newCategoryId
+                      )?.name;
                       toast.info(`Filtering by ${categoryName}`);
                     }
                   }}
@@ -89,7 +96,10 @@ export default function BlogPage() {
               </div>
 
               {/* Create New Post Button */}
-              <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
+              <Button
+                asChild
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+              >
                 <Link href="/blog/new">
                   <Plus className="w-5 h-5" />
                   <span>Create Post</span>
@@ -101,8 +111,11 @@ export default function BlogPage() {
             {categoryId && (
               <div className="mt-4 flex items-center gap-2">
                 <span className="text-sm text-gray-600">Active filter:</span>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 gap-1.5">
-                  {categories?.find(c => c.id === categoryId)?.name}
+                <Badge
+                  variant="secondary"
+                  className="bg-blue-100 text-blue-700 hover:bg-blue-100 gap-1.5"
+                >
+                  {categories?.find((c) => c.id === categoryId)?.name}
                   <button
                     onClick={() => {
                       setCategoryId(undefined);
@@ -122,17 +135,16 @@ export default function BlogPage() {
         {posts && posts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {posts.map((post: Post) => (
-              <Link
-                key={post.id}
-                href={`/blog/${post.slug}`}
-                className="group"
-              >
+              <Link key={post.id} href={`/blog/${post.slug}`} className="group">
                 <Card className="h-full hover:shadow-md transition-all overflow-hidden py-0">
                   <CardContent className="p-5 sm:p-6">
                     {/* Status Badge */}
-                    {post.status === 'draft' && (
+                    {post.status === "draft" && (
                       <div className="mb-3">
-                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                        <Badge
+                          variant="secondary"
+                          className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+                        >
                           Draft
                         </Badge>
                       </div>
@@ -172,10 +184,10 @@ export default function BlogPage() {
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <Calendar className="w-4 h-4" />
                         <time dateTime={post.createdAt.toISOString()}>
-                          {post.createdAt.toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
+                          {post.createdAt.toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
                           })}
                         </time>
                       </div>
@@ -196,13 +208,18 @@ export default function BlogPage() {
             <CardContent className="p-12 text-center">
               <div className="max-w-sm mx-auto">
                 <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No posts found</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No posts found
+                </h3>
                 <p className="text-gray-600 mb-6">
-                  {categoryId 
+                  {categoryId
                     ? "No posts in this category yet. Try selecting a different category."
                     : "Get started by creating your first blog post."}
                 </p>
-                <Button asChild className="gap-2">
+                <Button
+                  asChild
+                  className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+                >
                   <Link href="/blog/new">
                     <Plus className="w-5 h-5" />
                     Create Your First Post

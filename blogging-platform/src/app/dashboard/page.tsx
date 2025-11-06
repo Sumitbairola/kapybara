@@ -2,19 +2,19 @@
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { useState, useEffect } from "react";
-import { 
-  Loader2, 
-  Plus, 
-  FileText, 
-  CheckCircle2, 
-  Clock, 
-  Calendar, 
-  Tag, 
-  Eye, 
-  Edit, 
+import {
+  Loader2,
+  Plus,
+  FileText,
+  CheckCircle2,
+  Clock,
+  Calendar,
+  Tag,
+  Eye,
+  Edit,
   Trash2,
   ChevronRight,
-  Folder
+  Folder,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +39,12 @@ type Post = {
 };
 
 export default function DashboardPage() {
-  const { data: posts, refetch, isLoading, error } = trpc.post.getAll.useQuery();
+  const {
+    data: posts,
+    refetch,
+    isLoading,
+    error,
+  } = trpc.post.getAll.useQuery();
   const deletePost = trpc.post.delete.useMutation();
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -83,7 +88,8 @@ export default function DashboardPage() {
   }
 
   const draftPosts = posts?.filter((p: Post) => p.status === "draft") || [];
-  const publishedPosts = posts?.filter((p: Post) => p.status === "published") || [];
+  const publishedPosts =
+    posts?.filter((p: Post) => p.status === "published") || [];
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 lg:py-12">
@@ -99,7 +105,10 @@ export default function DashboardPage() {
                 Manage all your blog posts in one place
               </p>
             </div>
-            <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
+            <Button
+              asChild
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+            >
               <Link href="/blog/new">
                 <Plus className="w-5 h-5" />
                 Create New Post
@@ -186,7 +195,9 @@ export default function DashboardPage() {
                                 : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
                             }`}
                           >
-                            {post.status === "published" ? "Published" : "Draft"}
+                            {post.status === "published"
+                              ? "Published"
+                              : "Draft"}
                           </Badge>
                           <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2">
                             {post.title}
@@ -215,7 +226,9 @@ export default function DashboardPage() {
                               <div className="flex items-center gap-1.5">
                                 <Tag className="w-4 h-4" />
                                 <span>
-                                  {post.categories.map((c) => c.name).join(", ")}
+                                  {post.categories
+                                    .map((c) => c.name)
+                                    .join(", ")}
                                 </span>
                               </div>
                             </>
@@ -282,7 +295,10 @@ export default function DashboardPage() {
                   <p className="text-gray-600 mb-6 text-sm sm:text-base">
                     Get started by creating your first blog post.
                   </p>
-                  <Button asChild className="gap-2">
+                  <Button
+                    asChild
+                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+                  >
                     <Link href="/blog/new">
                       <Plus className="w-5 h-5" />
                       Create Your First Post
@@ -296,10 +312,7 @@ export default function DashboardPage() {
 
         {/* Quick Links */}
         <div className="mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Link
-            href="/categories"
-            className="group"
-          >
+          <Link href="/categories" className="group">
             <Card className="hover:shadow-md hover:border-gray-300 transition-all py-0">
               <CardContent className="p-5 sm:p-6">
                 <div className="flex items-center gap-4">
@@ -320,10 +333,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
 
-          <Link
-            href="/blog"
-            className="group"
-          >
+          <Link href="/blog" className="group">
             <Card className="hover:shadow-md hover:border-gray-300 transition-all py-0">
               <CardContent className="p-5 sm:p-6">
                 <div className="flex items-center gap-4">
@@ -334,7 +344,9 @@ export default function DashboardPage() {
                     <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors">
                       View Blog
                     </h3>
-                    <p className="text-sm text-gray-600">See all published posts</p>
+                    <p className="text-sm text-gray-600">
+                      See all published posts
+                    </p>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
                 </div>
